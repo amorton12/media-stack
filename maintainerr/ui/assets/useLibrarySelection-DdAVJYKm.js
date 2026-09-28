@@ -1,0 +1,1 @@
+import{r as e}from"./rolldown-runtime-hePW80VL.js";import{ft as t}from"./icons-DvLqq1eH.js";var n=e(t()),r=({initialLibraryId:e}={})=>{let[t,r]=(0,n.useState)(e),i=(0,n.useRef)(e);return{selectedLibrary:t,selectedLibraryRef:i,applySelectedLibrary:(0,n.useCallback)(e=>{i.current=e,r(e)},[]),shouldSkipLibrarySwitch:(0,n.useCallback)(e=>!e||i.current===e,[])}};export{r as t};

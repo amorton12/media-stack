@@ -1,0 +1,18 @@
+<Config>
+  <BindAddress>*</BindAddress>
+  <Port>7878</Port>
+  <SslPort>9898</SslPort>
+  <EnableSsl>False</EnableSsl>
+  <LaunchBrowser>True</LaunchBrowser>
+  <ApiKey>dc32091a55a6428d9c65f40b7d30a251</ApiKey>
+  <AuthenticationMethod>Forms</AuthenticationMethod>
+  <AuthenticationRequired>Enabled</AuthenticationRequired>
+  <Branch>master</Branch>
+  <LogLevel>info</LogLevel>
+  <SslCertPath></SslCertPath>
+  <SslCertPassword></SslCertPassword>
+  <UrlBase></UrlBase>
+  <InstanceName>Radarr</InstanceName>
+  <UpdateMechanism>Docker</UpdateMechanism>
+  <AnalyticsEnabled>False</AnalyticsEnabled>
+</Config>

@@ -1,0 +1,16 @@
+{
+    "users": [],
+    "albums": [],
+    "playlists": [
+        {
+            "id": "2UdpXuMUd3EjbKIeQhvnwO",
+            "title": "Dark Feminine / Siren Energy",
+            "start": 1786240800808,
+            "error": "Something went wrong while syncing: connect ECONNREFUSED 192.168.86.31:32400",
+            "end": 1786240808640
+        }
+    ],
+    "lidarr": [],
+    "mqtt": [],
+    "slskd": []
+}

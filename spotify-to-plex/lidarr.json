@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "url": "http://lidarr:8686",
+  "root_folder_path": "/downloads/music",
+  "quality_profile_id": 6,
+  "metadata_profile_id": 1,
+  "auto_sync": true
+}

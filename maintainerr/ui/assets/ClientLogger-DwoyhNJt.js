@@ -1,0 +1,1 @@
+import{a as e}from"./ApiHandler-gmcOo5L-.js";var t=(t,n,r)=>{let i=n instanceof Error?n.message:String(n),a=n instanceof Error?n.stack:void 0;return e(`/logs/client-error`,{message:t,details:i,stack:a,context:r})};export{t};

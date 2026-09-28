@@ -1,0 +1,29 @@
+{
+    "mqtt": {
+        "type": "mqtt",
+        "start": 1786269601696,
+        "status": "running"
+    },
+    "albums": {
+        "type": "albums",
+        "start": 1786240809096,
+        "status": "error",
+        "end": 1786240809097,
+        "error": "Found no playlists to sync"
+    },
+    "lidarr": {
+        "type": "lidarr",
+        "start": 1786248001413,
+        "status": "running"
+    },
+    "playlists": {
+        "type": "playlists",
+        "start": 1786240800801,
+        "status": "success",
+        "progress": {
+            "current": 1,
+            "total": 1
+        },
+        "end": 1786240808640
+    }
+}

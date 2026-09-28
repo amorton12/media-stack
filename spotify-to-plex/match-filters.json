@@ -1,0 +1,10 @@
+[
+  "artist:match AND title:match",
+  "artist:match AND title:contains",
+  "artist:match AND title:similarity>=0.8",
+  "artist:contains AND title:match",
+  "artist:similarity>=0.85 AND title:similarity>=0.85",
+  "artist:contains AND title:contains AND album:contains",
+  "artistWithTitle:similarity>=0.9",
+  "artist:similarity>=0.7 AND album:match AND title:similarity>=0.85"
+]

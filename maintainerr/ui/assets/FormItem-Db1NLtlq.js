@@ -1,0 +1,1 @@
+import{a as e}from"./query-idFeQoNF.js";var t=e(),n=e=>(0,t.jsxs)(`div`,{className:`form-row`,children:[(0,t.jsx)(`label`,{htmlFor:`${e.htmlField?e.htmlField:e.label}-field`,className:`text-label`,children:e.label}),(0,t.jsx)(`div`,{className:`form-input`,children:(0,t.jsx)(`div`,{className:`form-input-field`,children:e.children})})]});export{n as t};

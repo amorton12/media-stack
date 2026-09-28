@@ -1,0 +1,11 @@
+Version: 2.1.0
+Branch: master
+Commit: f6ed443
+Framework: net8.0
+Repository: https://github.com/TypNull/Tubifarry
+Minimum Lidarr Version: 3.1.2.0
+Built at: 2026-04-13 23:42:28 UTC
+
+Plugin Info:
+Name: Tubifarry
+Owner: TypNull

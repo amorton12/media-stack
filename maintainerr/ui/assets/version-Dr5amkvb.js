@@ -1,0 +1,1 @@
+var e=e=>{let t=e[0];return t!==void 0&&t>=`0`&&t<=`9`};export{e as t};

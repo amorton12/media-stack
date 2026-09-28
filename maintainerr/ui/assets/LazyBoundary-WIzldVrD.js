@@ -1,0 +1,1 @@
+import{r as e}from"./rolldown-runtime-hePW80VL.js";import{a as t}from"./query-idFeQoNF.js";import{ft as n}from"./icons-DvLqq1eH.js";import{t as r}from"./LoadingSpinner-pFBUU3qu.js";var i=e(n()),a=t(),o=({children:e,fallback:t=(0,a.jsx)(r,{})})=>(0,a.jsx)(i.Suspense,{fallback:t,children:e});export{o as t};

@@ -1,0 +1,497 @@
+name: media-stack
+services:
+  decluttarr:
+    image: ghcr.io/manimatter/decluttarr:latest
+    container_name: decluttarr
+    restart: always
+    networks:
+      - media
+    environment:
+      TZ: America/New_York
+      PUID: 1000
+      PGID: 1000
+      # --- Instances ---
+      SONARR: >
+        - base_url: "http://${SONARR_STATIC_CONTAINER_IP}:8989"
+          api_key: "$SONARR_0_API_KEY"
+      RADARR: >
+        - base_url: "http://${RADARR_STATIC_CONTAINER_IP}:7878"
+          api_key: "$RADARR_0_API_KEY"
+      LIDARR: >
+        - base_url: "http://${LIDARR_STATIC_CONTAINER_IP}:8686"
+          api_key: "$LIDARR_0_API_KEY"
+      # --- Download Clients ---
+      QBITTORRENT: >
+        - base_url: "http://vpn:5080"
+          username: "$QBIT_USERNAME"
+          password: "$QBIT_PASSWORD"
+      SABNZBD: >
+        - base_url: "http://${SABNZBD_STATIC_CONTAINER_IP}:6565"
+          api_key: "$SABNZBD_0_API_KEY"
+      # --- Global Settings ---
+      LOG_LEVEL: INFO
+      TEST_RUN: False
+      TIMER: 10
+      REMOVE_BAD_FILES: True
+      REMOVE_FAILED_DOWNLOADS: True
+      REMOVE_FAILED_IMPORTS: True
+      REMOVE_METADATA_MISSING: True
+      REMOVE_MISSING_FILES: True
+      REMOVE_ORPHANS: True
+      REMOVE_SLOW: True
+      REMOVE_STALLED: True
+      REMOVE_UNMONITORED: True
+      SEARCH_UNMET_CUTOFF: True
+      SEARCH_MISSING: True
+      DETECT_DELETIONS: True
+    volumes:
+      #- ./decluttarr/config.yaml:/app/config/config.yaml
+      - ./decluttarr/logs:/app/logs
+      - /tdas/media/media-stack/downloads:/downloads
+
+  explo:
+    container_name: explo
+    image: ghcr.io/lumepart/explo:dev
+    extra_hosts:
+      - "plex.local:host-gateway"
+    networks:
+      - media
+    ports:
+      - 7288:7288
+    labels:
+      - web-indexer.name=Explo
+    environment:
+      - TZ=America/New_York
+      - PUID=1000
+      - PGID=1000
+      - UI_USERNAME=${EXPLO_UI_USERNAME}
+      - UI_PASSWORD=${EXPLO_UI_PASSWORD}
+      - LIDARR_URL=http://${LIDARR_STATIC_CONTAINER_IP}:8686
+      - LIDARR_API_KEY=${LIDARR_0_API_KEY}
+      #- WEB_UI=true
+    volumes:
+      - ./explo/.env:/opt/explo/.env
+      - ./explo/config:/opt/explo/config
+      - /tdas/media/media-stack/downloads:/data/
+      - /tdas/media/media-stack/downloads/slskd_downloads:/slskd
+    restart: unless-stopped
+
+  lidarr:
+    container_name: lidarr
+    image: ghcr.io/hotio/lidarr:pr-plugins
+    networks:
+      media:
+        ipv4_address: ${LIDARR_STATIC_CONTAINER_IP}
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./lidarr:/config
+      - /tdas/media/media-stack/downloads:/downloads
+    ports:
+      - 8686:8686
+    labels:
+      - web-indexer.name=Lidarr
+    restart: unless-stopped
+
+  maintainerr:
+    image: ghcr.io/maintainerr/maintainerr:latest
+    container_name: maintainerr
+    user: 1000:1000
+    volumes:
+      - ./maintainerr:/opt/data
+    networks:
+      - media
+      - proxiable
+    environment:
+      - TZ=America/New_York
+#      - BASE_PATH=/maintainerr # uncomment if you're serving maintainerr from a subdirectory
+#      - UI_HOSTNAME=:: # uncomment if you want to listen on IPv6 instead (default 0.0.0.0)
+#      - UI_PORT=6247 # uncomment to change the UI port (default 6246)
+#      - GITHUB_TOKEN=ghp_yourtoken # Optional: GitHub Personal Access Token for higher API rate limits (60/hr without, 5000/hr with token)
+    ports:
+      - 6246:6246
+    labels:
+      - web-indexer.name=Maintainerr
+    restart: unless-stopped
+
+#  audiobookshelf:
+#    container_name: audiobookshelf
+#    image: ghcr.io/advplyr/audiobookshelf:latest
+#    networks:
+#      - media
+#    environment:
+#      - TZ=America/New_York
+#    volumes:
+#      - ./audiobookshelf/audiobooks:/audiobooks
+#      - ./audiobookshelf/podcasts:/podcasts
+#      - ./audiobookshelf/config:/config
+#      - ./audiobookshelf/metadata:/metadata
+#    ports:
+#      - 13378:80
+#    labels:
+#      - web-indexer.name=Audiobookshelf
+#    restart: unless-stopped
+
+#  mediasage:
+#    image: mediasage:latest
+#    container_name: mediasage
+#    networks:
+#      - media
+#    ports:
+#      - 5765:5765
+#    extra_hosts:
+#      - "plex.local:host-gateway"
+#    environment:
+#      - TZ=America/New_York
+#      - PLEX_URL=http://plex.local:32400
+#      - PLEX_TOKEN=${PLEX_TOKEN}
+#      - PLEX_MUSIC_LIBRARY=${PLEX_MUSIC_LIBRARY:-Music}
+#      # Performance tuning
+#      - UVICORN_WORKERS=${UVICORN_WORKERS:-1}
+#
+#      # LLM Provider (anthropic, openai, gemini, ollama, or custom)
+#      # Defaults to gemini. Can also be configured in the web UI.
+#      #- LLM_PROVIDER=gemini
+#
+#      # Cloud provider API keys (set one)
+#      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+#      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+#      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+#
+#      # Optional: Override default models
+#      #- LLM_MODEL_ANALYSIS=gemini-2.5-flash
+#      #- LLM_MODEL_GENERATION=gemini-2.5-flash
+#
+#      # Local LLM: Ollama (experimental)
+#      #- LLM_PROVIDER=ollama
+#      #- OLLAMA_URL=http://host.docker.internal:11434
+#      #- OLLAMA_CONTEXT_WINDOW=32768
+#
+#      # Local LLM: Custom OpenAI-compatible API (experimental)
+#      #- LLM_PROVIDER=custom
+#      #- CUSTOM_LLM_URL=https://openrouter.ai/api/v1
+#      #- CUSTOM_LLM_API_KEY=sk-or-your-key
+#      #- CUSTOM_CONTEXT_WINDOW=32768
+#    volumes:
+#      - ./mediasage:/app/data
+#      - /tdas/media/media-stack/downloads:/downloads
+#    labels:
+#      - web-indexer.name=MediaSage
+#    restart: unless-stopped
+
+  multi-scrobbler:
+    image: foxxmd/multi-scrobbler
+    container_name: multi-scrobbler
+    extra_hosts:
+      - "plex.local:host-gateway"
+    environment:
+      - TZ=America/New_York
+      - BASE_URL=http://${MULTI_SCROBBLER_STATIC_CONTAINER_IP}:9078
+      # all Environmental Variables in below examples go here!
+      - PLEX_URL=http://plex.local:32400
+      - PLEX_TOKEN=${PLEX_TOKEN}
+      - LZ_TOKEN=${LZ_TOKEN}
+      - LZ_USER=${LZ_USER}
+    networks:
+      - media
+    volumes:
+      - ./multi-scrobbler:/config
+    ports:
+      - "9078:9078"
+    labels:
+      - web-indexer.name=Multi-Scrobbler
+    restart: unless-stopped
+
+  notifiarr:
+    container_name: notifiarr
+    hostname: notifiarr
+    image: ghcr.io/notifiarr/notifiarr:latest
+    networks:
+      - media
+      - proxiable
+    extra_hosts:
+      - "plex.local:host-gateway"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - DN_HOST_ID=${NOTIFIARR_HOST_ID}
+      - DN_API_KEY=${NOTIFIARR_API_KEY}
+      - DN_SONARR_0_NAME=Sonarr
+      - DN_RADARR_0_NAME=Radarr
+      - DN_LIDARR_0_NAME=Lidarr
+      - DN_PROWLARR_0_NAME=Prowlarr
+      - DN_SABNZBD_0_NAME=SABnzbd
+      - DN_QBIT_0_NAME=qBittorrent
+      - DN_SONARR_0_URL=http://${SONARR_STATIC_CONTAINER_IP}:8989
+      - DN_SONARR_0_API_KEY=${SONARR_0_API_KEY}
+      - DN_RADARR_0_URL=http://${RADARR_STATIC_CONTAINER_IP}:7878
+      - DN_RADARR_0_API_KEY=${RADARR_0_API_KEY}
+      - DN_LIDARR_0_URL=http://${LIDARR_STATIC_CONTAINER_IP}:8686
+      - DN_LIDARR_0_API_KEY=${LIDARR_0_API_KEY}
+      - DN_PROWLARR_0_URL=http://${PROWLARR_STATIC_CONTAINER_IP}:9696
+      - DN_PROWLARR_0_API_KEY=${PROWLARR_0_API_KEY}
+      - DN_SABNZBD_0_URL=http://${SABNZBD_STATIC_CONTAINER_IP}:6565
+      - DN_SABNZBD_0_API_KEY=${SABNZBD_0_API_KEY}
+      - DN_QBIT_0_URL=http://vpn:5080
+      - DN_QBIT_0_USERNAME=${QBIT_USERNAME}
+      - DN_QBIT_0_PASSWORD=${QBIT_PASSWORD}
+      - DN_PLEX_TOKEN=${PLEX_TOKEN}
+      - DN_PLEX_URL=http://plex.local:32400
+    volumes:
+      - ./notifiarr:/config
+      - ./notifiarr/logs:/logs
+    ports:
+      - 5454:5454
+    labels:
+      - web-indexer.name=Notifiarr
+    restart: unless-stopped
+
+  plex:
+    container_name: plex
+    image: plexinc/pms-docker
+    restart: unless-stopped
+    environment:
+      - TZ="America/New_York"
+      - PLEX_CLAIM=${PLEX_CLAIM}
+    network_mode: host
+    labels:
+      - web-indexer.name=Plex
+      - web-indexer.port=32400
+      - web-indexer.protocol=http
+    volumes:
+      - plex-database:/config
+      - plex-xcode:/transcode
+      - /tdas/media/media-stack/downloads:/downloads
+
+  prowlarr:
+    container_name: prowlarr
+    image: lscr.io/linuxserver/prowlarr:latest
+    networks:
+      media:
+        ipv4_address: ${PROWLARR_STATIC_CONTAINER_IP}
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./prowlarr:/config
+    ports:
+      - 9696:9696
+    labels:
+      - web-indexer.name=Prowlarr
+    restart: unless-stopped
+
+  qbittorrent:
+    container_name: qbittorrent
+    image: lscr.io/linuxserver/qbittorrent:latest
+    depends_on:
+      vpn:
+        condition: service_healthy
+    network_mode: service:vpn
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - WEBUI_PORT=5080
+    volumes:
+      - ./qbittorrent:/config
+      - /tdas/media/media-stack/downloads:/downloads
+    restart: "unless-stopped"
+
+  radarr:
+    container_name: radarr
+    image: lscr.io/linuxserver/radarr:latest
+    networks:
+      media:
+        ipv4_address: ${RADARR_STATIC_CONTAINER_IP} # It should be available IPv4 address in range of docker network `media` e.g. 172.20.0.2
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    ports:
+      - 7878:7878
+    labels:
+      - web-indexer.name=Radarr
+    volumes:
+      - ./radarr:/config
+      - /tdas/media/media-stack/downloads:/downloads
+    restart: "unless-stopped"
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    networks:
+      media:
+        ipv4_address: ${SABNZBD_STATIC_CONTAINER_IP} # It should be available IPv4 address in range of docker network `media` e.g. 172.20.0.2
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./sabnzbd:/config
+      - /tdas/media/media-stack/downloads/incomplete:/incomplete-downloads #optional
+      - /tdas/media/media-stack/downloads:/downloads #optional
+    ports:
+      - 6565:6565
+    labels:
+      - web-indexer.name=SABnzbd
+    restart: unless-stopped
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    networks:
+      - media
+      - proxiable
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./seerr:/app/config
+    ports:
+      - 5055:5055
+    labels:
+      - web-indexer.name=Seerr
+    restart: unless-stopped
+
+  slskd:
+    image: slskd/slskd:latest
+    container_name: slskd
+    depends_on:
+      vpn:
+        condition: service_healthy
+    network_mode: service:vpn
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - SLSKD_REMOTE_CONFIGURATION=true
+      - SLSKD_SLSK_USERNAME=${SLSKD_SLSK_USERNAME}
+      - SLSKD_SLSK_PASSWORD=${SLSKD_SLSK_PASSWORD}
+      - SLSKD_VPN=true
+      - SLSKD_VPN_PORT_FORWARDING=true
+      - SLSKD_VPN_GLUETUN_URL=http://localhost:8000
+      - SLSKD_VPN_GLUETUN_API_KEY=${GLUETUN_API_KEY}
+      - SLSKD_SHARED_DIR=/downloads/music
+    volumes:
+      - ./slskd:/app
+      - /tdas/media/media-stack/downloads:/downloads
+    restart: always
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    networks:
+      media:
+        ipv4_address: ${SONARR_STATIC_CONTAINER_IP} # It should be available IPv4 address in range of docker network `media` e.g. 172.20.0.2
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - ./sonarr:/config
+      - /tdas/media/media-stack/downloads:/downloads
+    ports:
+      - 8989:8989
+    labels:
+      - web-indexer.name=Sonarr
+    restart: unless-stopped
+
+  unpackerr:
+    image: golift/unpackerr
+    container_name: unpackerr
+    volumes:
+      - ./unpackerr:/config
+      - /tdas/media/media-stack/downloads:/downloads
+    restart: always
+    user: 1000:1000
+    networks:
+      - media
+    environment:
+      - TZ=America/New_York
+      - UN_LOG_FILE=/downloads/log/unpackerr.log
+      - UN_SONARR_0_URL=http://${SONARR_STATIC_CONTAINER_IP}:8989
+      - UN_SONARR_0_API_KEY=${SONARR_0_API_KEY}
+      - UN_RADARR_0_URL=http://${RADARR_STATIC_CONTAINER_IP}:7878
+      - UN_RADARR_0_API_KEY=${RADARR_0_API_KEY}
+      - UN_LIDARR_0_URL=http://${LIDARR_STATIC_CONTAINER_IP}:8686
+      - UN_LIDARR_0_API_KEY=${LIDARR_0_API_KEY}
+
+  vpn:
+    ## Read https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers for details on configuring VPN for your service provider.
+    container_name: vpn
+    image: qmcgaw/gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TZ=America/New_York
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - GLUETUN_HTTP_CONTROL_SERVER_ENABLE=on
+      - 'HTTP_CONTROL_SERVER_AUTH_DEFAULT_ROLE={"auth":"apikey","apikey":"${GLUETUN_API_KEY}"}'
+      - VPN_PORT_FORWARDING=on
+      - VPN_PORT_FORWARDING_PROVIDER=protonvpn
+      - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh -c 'wget -O- --retry-connrefused --post-data "json={\"listen_port\":{{PORTS}}}" http://127.0.0.1:5080/api/v2/app/setPreferences 2>&1'
+      - HTTPPROXY=off
+      - SHADOWSOCKS=off
+      - UPDATER_PERIOD=24h
+    networks:
+      - media
+    volumes:
+      - ./vpn:/gluetun
+    ports:
+      - 5080:5080 # qBittorrent WebUI port forwarding
+      - 6881:6881 # qBittorrent listening port forwarding
+      - 6881:6881/udp # qBittorrent listening port forwarding
+      - 5030:5030 # slskd port forwarding
+      - 5031:5031 # slskd port forwarding
+    labels:
+      - web-indexer.name.5080=qBittorrent
+      - web-indexer.name.6881=qBittorrent
+      - web-indexer.name.5030=slskd
+      - web-indexer.name.5031=slskd
+    restart: "unless-stopped"
+
+#  spotify-to-plex:
+#    container_name: spotify-to-plex
+#    image: jjdenhertog/spotify-to-plex
+#    networks:
+#      - media
+#    ports:
+#      - 9030:9030
+#    environment:
+#      - SPOTIFY_API_CLIENT_ID=a87059c88a474a77b9a68ec09bca8675
+#      - SPOTIFY_API_CLIENT_SECRET=fa70c85f90bd4e8194dcd04cabbfc95c
+#      - SPOTIFY_API_REDIRECT_URI=https://jjdenhertog.github.io/spotify-to-plex/callback.html
+#      - ENCRYPTION_KEY=7cdf154e235cf4b161470d68d319128cd4e17f6e32723d497517f55bfafc01ff
+#      - PLEX_APP_ID=eXf+f9ktw3CZ8i45OY468WxriOCtoFxuNPzVeDcAwfw=
+#      - LIDARR_API_KEY=${LIDARR_0_API_KEY}
+#    volumes:
+#      - ./spotify-to-plex:/app/config
+#    labels:
+#      - web-indexer.name=Spotify to Plex
+#    restart: unless-stopped
+
+volumes:
+  torrent-downloads:
+  radarr-config:
+  sonarr-config:
+  prowlarr-config:
+  lidarr-config:
+  explo-config:
+  audiobookshelf-config:
+  qbittorrent-config:
+  plex-database:
+  plex-xcode:
+
+networks:
+  media:
+    external: true
+  proxiable:
+    external: true
